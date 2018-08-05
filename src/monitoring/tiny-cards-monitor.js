@@ -6,6 +6,8 @@ import TinyCardsScraper from '../scraping/tiny-cards-scraper';
 
 export default class TinyCardsMonitor {
     constructor(nightmare, opts) {
+        this._unexpiredDate = '1997-01-01'
+        this._completedProgress = '100%'
         this._scraper = new TinyCardsScraper(nightmare, opts)
         this._email = opts.email
         this._smtpOptions = opts.smtp
@@ -65,7 +67,7 @@ export default class TinyCardsMonitor {
         if (new Date().getHours() == 5) {
             // expire everything
             await self._context.MonitorRecord.update({
-                LastSeen: new Date('1997-01-01')
+                LastSeen: new Date(self._unexpiredDate)
             })
         }
 
@@ -75,6 +77,7 @@ export default class TinyCardsMonitor {
         var decks = self._scraper.decks
         var toNotify = []
         for (var deck of decks) {
+            if (deck.progress == self._completedProgress) continue
             // get deck from database
             var fromDb = await self._context.MonitorRecord.findAll({
                 where: {
