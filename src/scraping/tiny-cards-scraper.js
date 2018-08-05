@@ -1,6 +1,6 @@
 import {writeFileSync, existsSync, readFileSync} from 'fs'
 
-class TinyCardsMonitor {
+class TinyCardsScraper {
   constructor(nightmare, opts) {
     this._tinyCardsHome = 'https://tinycards.duolingo.com/'
     this._btnLoginSelector = 'LOG IN WITH DUOLINGO'
