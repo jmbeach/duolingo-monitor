@@ -1,6 +1,7 @@
 lib/
 cookie
 config.json
+monitor.db
 # Created by https://www.gitignore.io/api/node
 
 ### Node ###

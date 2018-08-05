@@ -44,6 +44,7 @@ class TinyCardsScraper {
 
   async getDecks() {
     const self = this
+    self.decks = []
 
     var openCourse = await self._nightmare
       .wait(5000)
@@ -157,4 +158,4 @@ class TinyCardsScraper {
   }
 }
 
-module.exports = TinyCardsMonitor
+module.exports = TinyCardsScraper

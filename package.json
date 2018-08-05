@@ -13,7 +13,10 @@
   "dependencies": {
     "electron": "^2.0.6",
     "fast-async": "^6.3.7",
-    "nightmare": "^3.0.1"
+    "nightmare": "^3.0.1",
+    "nodemailer": "^4.6.7",
+    "sequelize": "^4.38.0",
+    "sqlite3": "^4.0.2"
   },
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
