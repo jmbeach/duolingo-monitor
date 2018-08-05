@@ -1,0 +1,13 @@
+{
+    "username": "<tiny-cards-username>",
+    "password": "<tiny-cards-password",
+    "courseUrl": "<the full url to the TinyCards course to monitor>",
+    "email": "<email to notify>",
+    "smtp": {
+        "host": "<smtp host to use for notification>",
+        "username": "<username for sending emails>",
+        "password": "<password for sending emails>",
+        "port": 587,
+        "secure": false
+    }
+}
