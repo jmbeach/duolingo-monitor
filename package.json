@@ -1,0 +1,34 @@
+{
+  "name": "tiny-cards-monitor",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src --out-dir lib",
+    "test-debug": "mocha --compilers js:babel-core/register --inspect",
+    "test": "mocha --compilers js:babel-core/register"
+  },
+  "author": "Jared Beach",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^2.0.6",
+    "fast-async": "^6.3.7",
+    "nightmare": "^3.0.1"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^4.17.0",
+    "mocha": "^5.0.0"
+  },
+  "babel": {
+    "presets": [
+      "env"
+    ],
+    "plugins": [
+      "fast-async"
+    ]
+  }
+}
