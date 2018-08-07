@@ -13,7 +13,6 @@ class TinyCardsScraper {
     this._deckUnstartedClass = '_27a_4'
     this._activeIncompleteDeckClass = '_2SILG _1-nKn'
     this._courseSelector = '#root > div > div._8SfjL'
-    this._homeSelector = '#root > div > div.op3wk > div > div:nth-child(3) > div.dNvt9 > div:nth-child(4) > div._3VMGd > a:nth-child(1)'
     this._cookieFile = './cookie'
     this._courseUrl = opts.courseUrl
     this._username = opts.username
@@ -25,7 +24,6 @@ class TinyCardsScraper {
 
   login() {
     const self = this
-
     self._nightmare
         .goto(self._tinyCardsHome)
         .evaluate((buttonSelector) => {
@@ -118,6 +116,8 @@ class TinyCardsScraper {
         })
       }, self._deckClass, self._progressClass)
 
+      if (!allDecks) throw 'could not retrieve decks'
+
       self.decks = allDecks
 
       var accurateProgress = await self._nightmare
@@ -153,6 +153,8 @@ class TinyCardsScraper {
 
           return percentage
         }, self._activeDeckClass, self._activeIncompleteDeckClass, self._deckUnstartedClass)
+        .end()
+
       self.decks[self.decks.length - 1].progress = accurateProgress
     return self
   }

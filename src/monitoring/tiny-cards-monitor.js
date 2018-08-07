@@ -11,9 +11,10 @@ export default class TinyCardsMonitor {
         this._scraper = new TinyCardsScraper(nightmare, opts)
         this._email = opts.email
         this._smtpOptions = opts.smtp
+        this._dbPath = join(process.cwd(), 'monitor.db')
         this._context = create(new Sequelize(null, null, null, {
             dialect: 'sqlite',
-            storage: join(process.cwd(), 'monitor.db'),
+            storage: this._dbPath,
             logging: false
         }))
 
@@ -31,10 +32,6 @@ export default class TinyCardsMonitor {
     monitor() {
         var self = this
         self._process()
-        setInterval(async () => {
-            await self._process()
-        //}, 3600000);
-        }, 60000);
     }
 
     _notify(decks) {
@@ -67,13 +64,21 @@ export default class TinyCardsMonitor {
         if (new Date().getHours() == 5) {
             // expire everything
             await self._context.MonitorRecord.update({
-                LastSeen: new Date(self._unexpiredDate)
-            })
+                LastNotified: new Date(self._unexpiredDate)
+            },
+            {
+                where: {
+                    LastNotified: {
+                        [Sequelize.Op.gt]: new Date(self._unexpiredDate)
+                    }
+                }
+            }).catch(err => console.log(err))
         }
 
         await self._scraper.login()
             .getDecks()
-        self._scraper._nightmare.end()
+
+        if (!self._scraper.decks || !self._scraper.decks.length) return
         var decks = self._scraper.decks
         var toNotify = []
         for (var deck of decks) {
@@ -83,7 +88,7 @@ export default class TinyCardsMonitor {
                 where: {
                     DeckUrl: deck.link
                 }
-            })
+            }).catch(err => console.log(err))
 
             var found = null
             if (fromDb.length) found = fromDb[0]
@@ -97,19 +102,19 @@ export default class TinyCardsMonitor {
                 if (found) {
                     //  update LastNotified
                     await self._context.MonitorRecord.update({
-                        LastNotified: new Date()
+                        LastNotified: new Date(self._unexpiredDate)
                     }, {
                         where: {
                             DeckUrl: found.DeckUrl
                         }
-                    })
+                    }).catch(err => console.log(err))
                 } else {
                     // insert monitor record
                     await self._context.MonitorRecord.create(
                         {
                             DeckUrl: deck.link,
                             LastNotified: new Date()
-                        })
+                        }).catch(err => console.log(err))
                 }
             }
 
@@ -120,6 +125,6 @@ export default class TinyCardsMonitor {
 
     _isExpired(monitorRecord) {
         // true if last seen is more than an hour ago
-        return new Date() - monitorRecord.LastSeen < 3600000
+        return new Date() - monitorRecord.LastNotified > 3600000
     }
 }
