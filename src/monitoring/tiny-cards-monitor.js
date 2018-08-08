@@ -60,8 +60,11 @@ export default class TinyCardsMonitor {
     async _process() {
         var self = this
 
-        // if it is 5:00 A.M
-        if (new Date().getHours() == 5) {
+        // if it is 5:30 A.M
+        var currentTime = newDate()
+        if (currentTime.getHours() == 5
+            && currentTime.getMinutes() >= 29
+            && currentTime.getMinutes() <= 31) {
             // expire everything
             await self._context.MonitorRecord.update({
                 LastNotified: new Date(self._unexpiredDate)
@@ -125,6 +128,6 @@ export default class TinyCardsMonitor {
 
     _isExpired(monitorRecord) {
         // true if last seen is more than an hour ago
-        return new Date() - monitorRecord.LastNotified > 3600000
+        return new Date() - new Date(monitorRecord.LastNotified) > 3600000
     }
 }
