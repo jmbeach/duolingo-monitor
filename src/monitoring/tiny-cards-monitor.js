@@ -61,7 +61,7 @@ export default class TinyCardsMonitor {
         var self = this
 
         // if it is 5:30 A.M
-        var currentTime = newDate()
+        var currentTime = new Date()
         if (currentTime.getHours() == 5
             && currentTime.getMinutes() >= 29
             && currentTime.getMinutes() <= 31) {
