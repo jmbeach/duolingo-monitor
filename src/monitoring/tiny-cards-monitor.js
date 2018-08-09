@@ -105,7 +105,7 @@ export default class TinyCardsMonitor {
                 if (found) {
                     //  update LastNotified
                     await self._context.MonitorRecord.update({
-                        LastNotified: new Date(self._unexpiredDate)
+                        LastNotified: new Date()
                     }, {
                         where: {
                             DeckUrl: found.DeckUrl
