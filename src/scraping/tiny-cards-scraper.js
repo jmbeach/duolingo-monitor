@@ -9,7 +9,7 @@ class TinyCardsScraper {
     this._btnLoginSubmitSelector = 'button[type="submit"]'
     this._progressClass = '_3iOsQ'
     this._deckClass = '_1-ygB _1i9iG'
-    this._activeDeckClass = '_3qc77 _1vqs9'
+    this._activeDeckClass = '_2MMwG'
     this._deckUnstartedClass = '_27a_4'
     this._activeIncompleteDeckClass = '_2SILG _1-nKn'
     this._courseSelector = '#root > div > div._8SfjL'
