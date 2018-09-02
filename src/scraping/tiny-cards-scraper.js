@@ -11,7 +11,7 @@ class TinyCardsScraper {
     this._deckClass = '_1-ygB _1i9iG'
     this._activeDeckClass = '_2MMwG'
     this._deckUnstartedClass = '_27a_4'
-    this._activeIncompleteDeckClass = '_2SILG _1-nKn'
+    this._activeIncompleteDeckClass = '_1-IZO RMHAA'
     this._courseSelector = '#root > div > div._8SfjL'
     this._cookieFile = './cookie'
     this._courseUrl = opts.courseUrl

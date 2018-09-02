@@ -40,7 +40,7 @@ export default class TinyCardsMonitor {
         var subject = 'DuoLingo Monitor - ' + decks.length + ' decks need review'
         var body = ''
         for (var deck of decks) {
-            body += deck.link + '\n'
+            body += deck.link + ' | ' + deck.progress + ' complete\n'
         }
 
         var mail = {
