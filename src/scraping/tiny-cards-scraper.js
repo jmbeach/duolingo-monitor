@@ -62,7 +62,9 @@ class TinyCardsScraper {
 
     if (!allDecks) throw 'could not retrieve decks'
 
-    self.decks = allDecks
+    self.decks = allDecks.decks
+    self.totalDecks = allDecks.totalDecks
+    self.startedDecks = allDecks.startedDecks
 
     var accurateProgress = await self._nightmare
       .wait(2000)
@@ -89,6 +91,7 @@ class TinyCardsScraper {
 
         return false
       }
+
       var processResults = function() {
         for (var deck of decks) {
           var deckStatus = {}
@@ -114,18 +117,33 @@ class TinyCardsScraper {
 
       var decks = document.getElementsByClassName(deckClass)
       var lastResultCount = 0
+      var lastTotalResultCount = 0
       var doLoad = true
       var scrollLoop = function() {
         if (!doLoad) return
-        processResults()
-        if (result.count == lastResultCount) {
+
+        // if we haven't processed all of the activeDecks
+        if (result.length < 1 || result.length != lastResultCount) {
+          lastResultCount = result.length
+          processResults()
+        } else if (decks.length != lastTotalResultCount) {
+          // keep scrolling
+        } else {
           doLoad = false
+          var deckLength = decks.length
+          var decksWithProgressCount = document.getElementsByClassName(progressClass).length
+
           var lastResult = result[result.length - 1]
           findLastStarted(lastResult, decks).click()
-          resolve(result)
+          resolve({
+            decks: result,
+            startedDecks: decksWithProgressCount,
+            totalDecks: deckLength
+          })
         }
 
-        lastResultCount = result.count
+        if (!doLoad) return
+        lastTotalResultCount = decks.length
         decks[decks.length - 1].scrollIntoView()
         decks = document.getElementsByClassName(deckClass)
       }
