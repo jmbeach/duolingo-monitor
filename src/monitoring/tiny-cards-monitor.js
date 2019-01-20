@@ -34,7 +34,7 @@ export default class TinyCardsMonitor {
         self._process()
     }
 
-    _notify(decks) {
+    _notify(decks, totalDecks, startedDecks) {
         var self = this
         if (!decks || !decks.length) return
         var subject = 'DuoLingo Monitor - ' + decks.length + ' decks need review'
@@ -42,6 +42,8 @@ export default class TinyCardsMonitor {
         for (var deck of decks) {
             body += deck.link + ' | ' + deck.progress + ' complete\n'
         }
+
+        body += `\nTotal Progress: ${startedDecks}/${totalDecks} decks started (${((startedDecks / totalDecks) * 100).toFixed(2)} %)`
 
         var mail = {
             from: '"DuoLingo Monitor" <' + self._smtpOptions.username + '>',
@@ -100,7 +102,6 @@ export default class TinyCardsMonitor {
             if (!found || self._isExpired(found)) {
                 //  add to notification list
                 toNotify.push(deck)
-
                 
                 if (found) {
                     //  update LastNotified
@@ -123,7 +124,7 @@ export default class TinyCardsMonitor {
 
         }
 
-        self._notify(toNotify)
+        self._notify(toNotify, self._scraper.totalDecks, self._scraper.startedDecks)
     }
 
     _isExpired(monitorRecord) {
