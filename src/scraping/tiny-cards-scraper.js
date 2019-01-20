@@ -40,6 +40,44 @@ class TinyCardsScraper {
     return self
   }
 
+  async getDecks() {
+    const self = this
+    self.decks = []
+
+    var openCourse = await self._nightmare
+      .wait(5000)
+      .evaluate((courseUrl) => {
+        var links = document.getElementsByTagName('a')
+        for (var link of links) {
+          if (link.href.toLowerCase() === courseUrl.toLowerCase()) {
+            link.click()
+          }
+        }
+      }, self._courseUrl)
+
+    var allDecks = await self._nightmare
+      .wait(2000)
+      .evaluate(self._getAllDecks,
+        self._deckClass, self._progressClass)
+
+    if (!allDecks) throw 'could not retrieve decks'
+
+    self.decks = allDecks
+
+    var accurateProgress = await self._nightmare
+      .wait(2000)
+      .evaluate(self._getMostRecentProgress,
+        self._activeDeckClass,
+        self._activeIncompleteDeckClass,
+        self._deckUnstartedClass)
+
+    self.decks[self.decks.length - 1].progress = accurateProgress
+
+    await self._nightmare.end()
+
+    return self
+  }
+
   _getAllDecks (deckClass, progressClass) {
     return new Promise(resolve => {
       var result = []
@@ -99,74 +137,41 @@ class TinyCardsScraper {
     });
   }
 
-  async getDecks() {
-    const self = this
-    self.decks = []
+  _getMostRecentProgress (activeDeckClass, progressClass, unstartedClass) {
+    var activeDecks = document.getElementsByClassName(activeDeckClass)
+    var complete = 0
+    var incomplete = 0
+    var percentage = 0.0
+    console.log(activeDecks.length)
+    for (var deck of activeDecks) {
+      var progress = deck.getElementsByClassName(progressClass)
+      var unstarted = deck.getElementsByClassName(unstartedClass)
+      console.log("progress")
+      console.log(progress.length)
+      console.log("unstarted")
+      console.log(unstarted.length)
+      if (progress.length) {
+        // if it has a progress bar
+        incomplete++
+      }
+      else if (unstarted.length) {
+        // if it only has a number in the card
+        continue
+      } else {
+        // otherwise, it's a shiny, completed deck
+        complete ++
+      }
+    }
 
-    var openCourse = await self._nightmare
-      .wait(5000)
-      .evaluate((courseUrl) => {
-        var links = document.getElementsByTagName('a')
-        for (var link of links) {
-          if (link.href.toLowerCase() === courseUrl.toLowerCase()) {
-            link.click()
-          }
-        }
-      }, self._courseUrl)
+    console.log(complete)
+    console.log(incomplete)
+    if (complete + incomplete != 0) {
+      percentage = (complete / (complete + incomplete)) * 100
+    } 
 
-    var allDecks = await self._nightmare
-      .wait(2000)
-      .evaluate(self._getAllDecks,
-        self._deckClass, self._progressClass)
+    percentage += "%"
 
-    if (!allDecks) throw 'could not retrieve decks'
-
-    self.decks = allDecks
-
-    var accurateProgress = await self._nightmare
-      .wait(2000)
-      .evaluate((activeDeckClass, progressClass, unstartedClass) => {
-        var activeDecks = document.getElementsByClassName(activeDeckClass)
-        var complete = 0
-        var incomplete = 0
-        var percentage = 0.0
-        console.log(activeDecks.length)
-        for (var deck of activeDecks) {
-          var progress = deck.getElementsByClassName(progressClass)
-          var unstarted = deck.getElementsByClassName(unstartedClass)
-          console.log("progress")
-          console.log(progress.length)
-          console.log("unstarted")
-          console.log(unstarted.length)
-          if (progress.length) {
-            // if it has a progress bar
-            incomplete++
-          }
-          else if (unstarted.length) {
-            // if it only has a number in the card
-            continue
-          } else {
-            // otherwise, it's a shiny, completed deck
-            complete ++
-          }
-        }
-
-        console.log(complete)
-        console.log(incomplete)
-        if (complete + incomplete != 0) {
-          percentage = (complete / (complete + incomplete)) * 100
-        } 
-
-        percentage += "%"
-
-        return percentage
-      }, self._activeDeckClass, self._activeIncompleteDeckClass, self._deckUnstartedClass)
-
-    self.decks[self.decks.length - 1].progress = accurateProgress
-
-    await self._nightmare.end()
-
-    return self
+    return percentage
   }
 }
 
