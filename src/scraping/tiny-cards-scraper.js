@@ -40,6 +40,65 @@ class TinyCardsScraper {
     return self
   }
 
+  _getAllDecks (deckClass, progressClass) {
+    return new Promise(resolve => {
+      var result = []
+      var decks = document.getElementsByClassName(deckClass)
+      var searchProcessed = function(link) {
+        for (var res of result) {
+          if (res.link == link) return res
+        }
+
+        return false
+      }
+      var processResults = function() {
+        for (var deck of decks) {
+          var deckStatus = {}
+          var deckLink = deck.getElementsByTagName('a')[0]
+          deckStatus.link = deckLink.href
+          if (searchProcessed(deckStatus.link)) continue
+          deckStatus.name = deckLink.firstChild.innerText
+          var progressBar = deck.getElementsByClassName(progressClass)[0]
+          if (!progressBar) return
+          deckStatus.progress = progressBar.style.width
+          result.push(deckStatus)
+        }
+      }
+
+      var findLastStarted = function(lastResult, decks) {
+        for (var deck of decks) {
+          var link = deck.getElementsByTagName('a')[0]
+          if (link.href == lastResult.link) return link
+        }
+        
+        return null
+      }
+
+      var decks = document.getElementsByClassName(deckClass)
+      var lastResultCount = 0
+      var doLoad = true
+      var scrollLoop = function() {
+        if (!doLoad) return
+        processResults()
+        if (result.count == lastResultCount) {
+          doLoad = false
+          var lastResult = result[result.length - 1]
+          findLastStarted(lastResult, decks).click()
+          resolve(result)
+        }
+
+        lastResultCount = result.count
+        decks[decks.length - 1].scrollIntoView()
+        decks = document.getElementsByClassName(deckClass)
+      }
+
+      scrollLoop()
+      setInterval(scrollLoop, 3000)
+
+      return result
+    });
+  }
+
   async getDecks() {
     const self = this
     self.decks = []
@@ -57,64 +116,8 @@ class TinyCardsScraper {
 
     var allDecks = await self._nightmare
       .wait(2000)
-      .evaluate((deckClass, progressClass) => {
-        return new Promise(resolve => {
-          var result = []
-          var decks = document.getElementsByClassName(deckClass)
-          var searchProcessed = function(link) {
-            for (var res of result) {
-              if (res.link == link) return res
-            }
-
-            return false
-          }
-          var processResults = function() {
-            for (var deck of decks) {
-              var deckStatus = {}
-              var deckLink = deck.getElementsByTagName('a')[0]
-              deckStatus.link = deckLink.href
-              if (searchProcessed(deckStatus.link)) continue
-              deckStatus.name = deckLink.firstChild.innerText
-              var progressBar = deck.getElementsByClassName(progressClass)[0]
-              if (!progressBar) return
-              deckStatus.progress = progressBar.style.width
-              result.push(deckStatus)
-            }
-          }
-
-          var findLastStarted = function(lastResult, decks) {
-            for (var deck of decks) {
-              var link = deck.getElementsByTagName('a')[0]
-              if (link.href == lastResult.link) return link
-            }
-            
-            return null
-          }
-
-          var decks = document.getElementsByClassName(deckClass)
-          var lastResultCount = 0
-          var doLoad = true
-          var scrollLoop = function() {
-            if (!doLoad) return
-            processResults()
-            if (result.count == lastResultCount) {
-              doLoad = false
-              var lastResult = result[result.length - 1]
-              findLastStarted(lastResult, decks).click()
-              resolve(result)
-            }
-
-            lastResultCount = result.count
-            decks[decks.length - 1].scrollIntoView()
-            decks = document.getElementsByClassName(deckClass)
-          }
-
-          scrollLoop()
-          setInterval(scrollLoop, 3000)
-
-          return result
-        })
-      }, self._deckClass, self._progressClass)
+      .evaluate(self._getAllDecks,
+        self._deckClass, self._progressClass)
 
     if (!allDecks) throw 'could not retrieve decks'
 
