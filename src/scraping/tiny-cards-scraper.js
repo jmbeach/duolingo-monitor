@@ -7,10 +7,11 @@ class TinyCardsScraper {
     this._inputUserSelector = 'input[name="identifier"]'
     this._inputPassSelector = 'input[name="password"]'
     this._btnLoginSubmitSelector = 'button[type="submit"]'
-    this._progressClass = '_3iOsQ'
+    this._progressClass = '_2E6HG'
+    this._progressClassOuter = '_3iOsQ'
     this._deckClass = '_1-ygB _1i9iG'
     this._activeDeckClass = '_2MMwG'
-    this._deckUnstartedClass = '_27a_4'
+    this._completedClass = '_1_no8'
     this._activeIncompleteDeckClass = '_1-IZO RMHAA'
     this._courseSelector = '#root > div > div._8SfjL'
     this._cookieFile = './cookie'
@@ -58,7 +59,7 @@ class TinyCardsScraper {
     var allDecks = await self._nightmare
       .wait(2000)
       .evaluate(self._getAllDecks,
-        self._deckClass, self._progressClass)
+        self._deckClass, self._progressClassOuter)
 
     if (!allDecks) throw 'could not retrieve decks'
 
@@ -68,10 +69,10 @@ class TinyCardsScraper {
 
     var accurateProgress = await self._nightmare
       .wait(2000)
-      .evaluate(self._getMostRecentProgress,
+      .evaluate(self._getDeckProgress,
         self._activeDeckClass,
-        self._activeIncompleteDeckClass,
-        self._deckUnstartedClass)
+        self._progressClass,
+        self._completedClass)
 
     self.decks[self.decks.length - 1].progress = accurateProgress
 
@@ -101,7 +102,7 @@ class TinyCardsScraper {
           deckStatus.name = deckLink.firstChild.innerText
           var progressBar = deck.getElementsByClassName(progressClass)[0]
           if (!progressBar) return
-          deckStatus.progress = progressBar.style.width
+          deckStatus.progress = parseFloat(progressBar.style.width).toFixed(2) + "%"
           result.push(deckStatus)
         }
       }
@@ -155,29 +156,30 @@ class TinyCardsScraper {
     });
   }
 
-  _getMostRecentProgress (activeDeckClass, progressClass, unstartedClass) {
+  _getDeckProgress (activeDeckClass, progressClass, completedClass) {
     var activeDecks = document.getElementsByClassName(activeDeckClass)
     var complete = 0
     var incomplete = 0
+    var unstarted = 0
     var percentage = 0.0
+
     console.log(activeDecks.length)
     for (var deck of activeDecks) {
       var progress = deck.getElementsByClassName(progressClass)
-      var unstarted = deck.getElementsByClassName(unstartedClass)
+      var completed = deck.getElementsByClassName(completedClass)
       console.log("progress")
       console.log(progress.length)
-      console.log("unstarted")
-      console.log(unstarted.length)
-      if (progress.length) {
-        // if it has a progress bar
-        incomplete++
-      }
-      else if (unstarted.length) {
-        // if it only has a number in the card
-        continue
-      } else {
-        // otherwise, it's a shiny, completed deck
-        complete ++
+
+      if (completed.length) {
+        complete++;
+      } else if (progress.length) {
+        if (progress[0].style.width !== '0%') {
+          console.log(progress)
+          console.log(deck)
+          incomplete++
+        } else {
+          unstarted++
+        }
       }
     }
 
@@ -187,9 +189,7 @@ class TinyCardsScraper {
       percentage = (complete / (complete + incomplete)) * 100
     } 
 
-    percentage += "%"
-
-    return percentage
+    return percentage.toFixed(2) + "%"
   }
 }
 

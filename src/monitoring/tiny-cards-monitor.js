@@ -7,7 +7,7 @@ import TinyCardsScraper from '../scraping/tiny-cards-scraper';
 export default class TinyCardsMonitor {
     constructor(nightmare, opts) {
         this._unexpiredDate = '1997-01-01'
-        this._completedProgress = '100%'
+        this._completedProgress = '100.00%'
         this._scraper = new TinyCardsScraper(nightmare, opts)
         this._email = opts.email
         this._smtpOptions = opts.smtp
