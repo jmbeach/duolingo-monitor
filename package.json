@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "babel src --out-dir lib",
+    "debug": "babel-node src/index.js --inspect",
     "test-debug": "mocha --compilers js:babel-core/register --inspect",
     "test": "mocha --compilers js:babel-core/register"
   },
