@@ -16,4 +16,4 @@ To install:
 - npm install
 - copy the file `template.db` to wherever you'll run the application and call it `monitor.db`
 - copy the file `config-template.json` to `config.json` in the repo directory and fill it out
-- run `babel-node src\index.js`
+- run `npm run debug`
