@@ -82,6 +82,9 @@ export default class TinyCardsMonitor {
 
         await self._scraper.login()
             .getDecks()
+            .catch(err => {
+                console.error('Error retrieving decks', err)
+            })
 
         if (!self._scraper.decks || !self._scraper.decks.length) return
         var decks = self._scraper.decks
