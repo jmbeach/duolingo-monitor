@@ -1,4 +1,4 @@
-import {writeFileSync, existsSync, readFileSync} from 'fs'
+import { writeFileSync, existsSync, readFileSync } from 'fs'
 
 class TinyCardsScraper {
   constructor(nightmare, opts) {
@@ -26,18 +26,18 @@ class TinyCardsScraper {
   login() {
     const self = this
     self._nightmare
-        .goto(self._tinyCardsHome)
-        .evaluate((buttonSelector) => {
-          var buttons = document.getElementsByTagName('button')
-          for (var button of buttons) {
-            if (button.innerText.toLowerCase() === buttonSelector.toLowerCase()) {
-              button.click()
-            }
+      .goto(self._tinyCardsHome)
+      .evaluate((buttonSelector) => {
+        var buttons = document.getElementsByTagName('button')
+        for (var button of buttons) {
+          if (button.innerText.toLowerCase() === buttonSelector.toLowerCase()) {
+            button.click()
           }
-        }, self._btnLoginSelector)
-        .type(self._inputUserSelector, self._username)
-        .type(self._inputPassSelector, self._password)
-        .click(self._btnLoginSubmitSelector)
+        }
+      }, self._btnLoginSelector)
+      .type(self._inputUserSelector, self._username)
+      .type(self._inputPassSelector, self._password)
+      .click(self._btnLoginSubmitSelector)
     return self
   }
 
@@ -55,11 +55,21 @@ class TinyCardsScraper {
           }
         }
       }, self._courseUrl)
+      .catch(err => {
+        console.error('Error getting course', err)
+        self._nightmare.end()
+        return
+      })
 
     var allDecks = await self._nightmare
       .wait(2000)
       .evaluate(self._getAllDecks,
         self._deckClass, self._progressClassOuter)
+      .catch(err => {
+        console.error('Error getting all decks', err)
+        self._nightmare.end()
+        return
+      })
 
     if (!allDecks) throw 'could not retrieve decks'
 
@@ -73,6 +83,11 @@ class TinyCardsScraper {
         self._activeDeckClass,
         self._progressClass,
         self._completedClass)
+      .catch(err => {
+        console.error('Error getting detailed progress for deck', err)
+        self._nightmare.end()
+        return
+      })
 
     self.decks[self.decks.length - 1].progress = accurateProgress
 
@@ -81,11 +96,11 @@ class TinyCardsScraper {
     return self
   }
 
-  _getAllDecks (deckClass, progressClass) {
+  _getAllDecks(deckClass, progressClass) {
     return new Promise(resolve => {
       var result = []
       var decks = document.getElementsByClassName(deckClass)
-      var searchProcessed = function(link) {
+      var searchProcessed = function (link) {
         for (var res of result) {
           if (res.link == link) return res
         }
@@ -93,7 +108,7 @@ class TinyCardsScraper {
         return false
       }
 
-      var processResults = function() {
+      var processResults = function () {
         for (var deck of decks) {
           var deckStatus = {}
           var deckLink = deck.getElementsByTagName('a')[0]
@@ -107,12 +122,12 @@ class TinyCardsScraper {
         }
       }
 
-      var findLastStarted = function(lastResult, decks) {
+      var findLastStarted = function (lastResult, decks) {
         for (var deck of decks) {
           var link = deck.getElementsByTagName('a')[0]
           if (link.href == lastResult.link) return link
         }
-        
+
         return null
       }
 
@@ -120,7 +135,7 @@ class TinyCardsScraper {
       var lastResultCount = 0
       var lastTotalResultCount = 0
       var doLoad = true
-      var scrollLoop = function() {
+      var scrollLoop = function () {
         if (!doLoad) return
 
         // if we haven't processed all of the activeDecks
@@ -156,26 +171,21 @@ class TinyCardsScraper {
     });
   }
 
-  _getDeckProgress (activeDeckClass, progressClass, completedClass) {
+  _getDeckProgress(activeDeckClass, progressClass, completedClass) {
     var activeDecks = document.getElementsByClassName(activeDeckClass)
     var complete = 0
     var incomplete = 0
     var unstarted = 0
     var percentage = 0.0
 
-    console.log(activeDecks.length)
     for (var deck of activeDecks) {
       var progress = deck.getElementsByClassName(progressClass)
       var completed = deck.getElementsByClassName(completedClass)
-      console.log("progress")
-      console.log(progress.length)
 
       if (completed.length) {
         complete++;
       } else if (progress.length) {
         if (progress[0].style.width !== '0%') {
-          console.log(progress)
-          console.log(deck)
           incomplete++
         } else {
           unstarted++
@@ -183,11 +193,9 @@ class TinyCardsScraper {
       }
     }
 
-    console.log(complete)
-    console.log(incomplete)
     if (complete + incomplete != 0) {
       percentage = (complete / (complete + incomplete)) * 100
-    } 
+    }
 
     return percentage.toFixed(2) + "%"
   }
