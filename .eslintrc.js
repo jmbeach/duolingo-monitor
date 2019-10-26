@@ -1,9 +1,11 @@
 module.exports = {
   "env": {
       "browser": true,
+      "node": true,
       "es6": true
   },
   "parserOptions": {
+      "ecmaVersion": 2018,
       "sourceType": "module"
   },
   "extends": "eslint:recommended",
@@ -12,17 +14,9 @@ module.exports = {
           "error",
           2
       ],
-      "linebreak-style": [
-          "error",
-          "unix"
-      ],
       "quotes": [
           "error",
           "single"
-      ],
-      "semi": [
-          "error",
-          "never"
       ]
   }
 };
