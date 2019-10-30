@@ -4,16 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "babel src --out-dir lib",
-    "debug": "babel-node src/index.js --inspect",
-    "test-debug": "mocha --compilers js:babel-core/register --inspect",
-    "test": "mocha --compilers js:babel-core/register"
+    "build": "npx babel src --out-dir lib",
+    "debug": "npx babel-node src/index.js --inspect",
+    "test-debug": "npx mocha --compilers js:babel-core/register --inspect",
+    "test": "npx mocha --compilers js:babel-core/register"
   },
   "author": "Jared Beach",
   "license": "MIT",
   "dependencies": {
     "electron": "^2.0.6",
-    "fast-async": "^6.3.7",
     "nightmare": "^3.0.1",
     "nodemailer": "^4.6.7",
     "sequelize": "^4.38.0",
@@ -21,19 +20,11 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
-    "babel-polyfill": "^6.26.0",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
+    "@babel/node": "^7.6.3",
+    "@babel/preset-env": "^7.6.3",
     "eslint": "^4.17.0",
     "mocha": "^5.0.0"
-  },
-  "babel": {
-    "presets": [
-      "env"
-    ],
-    "plugins": [
-      "fast-async"
-    ]
   }
 }
