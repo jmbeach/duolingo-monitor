@@ -15,7 +15,7 @@
     "electron": "^2.0.6",
     "nightmare": "^3.0.1",
     "nodemailer": "^4.6.7",
-    "sequelize": "^4.38.0",
+    "sequelize": "^5.15.1",
     "sqlite3": "^4.0.2",
     "winston": "^3.2.1"
   },
