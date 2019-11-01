@@ -74,6 +74,8 @@ export default class TinyCardsMonitor {
     if (currentTime.getHours() == 5
             && currentTime.getMinutes() >= 29
             && currentTime.getMinutes() <= 31) {
+      this._logger.debug(`Expiring all decks for notifications. Setting date to "${self._unexpiredDate}"`);
+
       // expire everything
       await self._context.MonitorRecord.update({
         LastNotified: new Date(self._unexpiredDate)
@@ -95,26 +97,33 @@ export default class TinyCardsMonitor {
       });
 
     if (!self._scraper.decks || !self._scraper.decks.length) return
-    var decks = self._scraper.decks
-    var toNotify = []
-    for (var deck of decks) {
-      if (deck.progress == self._completedProgress) continue
+    let decks = self._scraper.decks
+    let toNotify = []
+    for (let deck of decks) {
+      if (deck.progress === self._completedProgress) continue
+      
+      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progrress: "${deck.progress}."`);
+
       // get deck from database
-      var fromDb = await self._context.MonitorRecord.findAll({
+      let fromDb = await self._context.MonitorRecord.findAll({
         where: {
           DeckUrl: deck.link
         }
       }).catch(err => this._logger.error(`Error getting deck from db ${err}`));
 
-      var found = null;
+      let found = null;
       if (fromDb.length) found = fromDb[0]
 
       // if not found or if found and expired
       if (!found || self._isExpired(found)) {
+        self._logger.debug(`Deck not found or is expired in DB. Notifying. Deck: "${deck.name}"."`);
+        
         //  add to notification list
         toNotify.push(deck)
 
         if (found) {
+          self._logger.debug(`Updating last notification time. Deck: "${deck.name}"."`);
+
           //  update LastNotified
           await self._context.MonitorRecord.update({
             LastNotified: new Date()
@@ -122,14 +131,15 @@ export default class TinyCardsMonitor {
             where: {
               DeckUrl: found.DeckUrl
             }
-          }).catch(err => this._logger.error(`Error updating monitor record last notified. ${err}`));
+          }).catch(err => self._logger.error(`Error updating monitor record last notified. ${err}`));
         } else {
+          self._logger.debug(`Creating monitor record. Deck: "${deck.name}"."`);
           // insert monitor record
           await self._context.MonitorRecord.create(
             {
               DeckUrl: deck.link,
               LastNotified: new Date()
-            }).catch(err => this._logger.error(`Error creating monitor record. ${err}`));
+            }).catch(err => self._logger.error(`Error creating monitor record. ${err}`));
         }
       }
 
@@ -138,8 +148,10 @@ export default class TinyCardsMonitor {
     self._notify(toNotify, self._scraper.totalDecks, self._scraper.startedDecks)
   }
 
+  /** @param monitorRecord {MonitorRecord} */
   _isExpired(monitorRecord) {
+    this._logger.debug(`Checking if monitor record is expired. Deck URL: "${monitorRecord.DeckUrl}". Last notified: "${monitorRecord.LastNotified}"`)
     // true if last seen is more than an hour ago
-    return new Date() - new Date(monitorRecord.LastNotified) > 3600000
+    return new Date().getTime() - new Date(monitorRecord.LastNotified).getTime() > 3600000
   }
 }

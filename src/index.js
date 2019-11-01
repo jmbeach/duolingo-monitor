@@ -6,7 +6,7 @@ import winston from 'winston';
 
 var nightmare = Nightmare({})
 const logger = winston.createLogger({
-  level: 'info',
+  level: 'debug',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf(({ level, message, label, timestamp }) => {
@@ -27,4 +27,4 @@ monitor.monitor();
 
 setInterval(() => {
   monitor.monitor();
-}, 60000);
+}, 300000);

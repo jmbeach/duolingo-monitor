@@ -22,12 +22,16 @@ class TinyCardsScraper {
     this._progressClassOuter = '_3iOsQ'
     this._tinyCardsHome = 'https://tinycards.duolingo.com/'
     this._username = opts.username
-    this.decks = []
+    /** @type {Array<{link: string, name: string, progress: string}>} */
+    this.decks = [];
+    this.startedDecks = 0;
+    this.totalDecks = 0;
   }
 
   login() {
-    this._logger.info('Logging in to tiny cards.');
     const self = this
+    self.decks = [];
+    self._logger.info('Logging in to tiny cards.');
     self._nightmare
       .goto(self._tinyCardsHome)
       .evaluate((buttonSelector) => {
@@ -45,15 +49,15 @@ class TinyCardsScraper {
   }
 
   async getDecks() {
-    this._logger.info('Getting decks from tiny cards.');
     const self = this
+    self._logger.info('Getting decks from tiny cards.');
     self.decks = []
 
-    this._logger.info('Opening the tiny cards course.');
-    var openCourse = await self._nightmare
+    self._logger.info('Opening the tiny cards course.');
+    await self._nightmare
       .wait(5000)
       .evaluate((courseUrl) => {
-        var links = document.getElementsByTagName('a')
+        const links = document.getElementsByTagName('a')
         for (var link of links) {
           if (link.href.toLowerCase() === courseUrl.toLowerCase()) {
             link.click()
@@ -61,44 +65,44 @@ class TinyCardsScraper {
         }
       }, self._courseUrl)
       .catch(err => {
-        this._logger.error(`Error getting course. Err: "${err}".`);
+        self._logger.error(`Error getting course. Err: "${err}".`);
         self._nightmare.end()
         return
-      })
+      });
 
-    this._logger.info('Getting all the decks from course.');
+    self._logger.info('Getting all the decks from course.');
     var allDecks = await self._nightmare
       .wait(2000)
       .evaluate(self._getAllDecks,
         self._deckClass, self._progressClassOuter)
       .catch(err => {
-        this._logger.error(`Error getting all decks. Err: "${err}".`);
+        self._logger.error(`Error getting all decks. Err: "${err}".`);
         self._nightmare.end();
         return
-      })
+      });
 
-    if (!allDecks) throw 'could not retrieve decks'
+    if (!allDecks) throw 'could not retrieve decks';
 
     self.decks = allDecks.decks
     self.totalDecks = allDecks.totalDecks
     self.startedDecks = allDecks.startedDecks
 
-    this._logger.info('Getting accurate progress from all decks.');
-    var accurateProgress = await self._nightmare
+    self._logger.info('Getting accurate progress from all decks.');
+    const accurateProgress = await self._nightmare
       .wait(2000)
       .evaluate(self._getDeckProgress,
         self._activeDeckClass,
         self._progressClass,
         self._completedClass)
       .catch(err => {
-        this._logger.error(`Error getting detailed progress for deck. Err: "${err}".`);
+        self._logger.error(`Error getting detailed progress for deck. Err: "${err}".`);
         self._nightmare.end()
         return
       })
 
     self.decks[self.decks.length - 1].progress = accurateProgress
 
-    this._logger.info('Closing the browser.');
+    self._logger.info('Closing the browser.');
     await self._nightmare.end()
 
     return self
@@ -205,8 +209,8 @@ class TinyCardsScraper {
       percentage = (complete / (complete + incomplete)) * 100
     }
 
-    return percentage.toFixed(2) + "%"
+    return percentage.toFixed(2) + '%'
   }
 }
 
-module.exports = TinyCardsScraper
+export default TinyCardsScraper;
