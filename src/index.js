@@ -5,7 +5,7 @@ import Monitor from './monitoring/tiny-cards-monitor';
 import Nightmare from 'nightmare';
 import winston from 'winston';
 
-var nightmare = Nightmare({})
+var nightmare = new Nightmare();
 const logger = winston.createLogger({
   level: 'debug',
   format: winston.format.combine(
