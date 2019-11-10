@@ -8,7 +8,7 @@ import winston from 'winston';
 export default class TinyCardsMonitor {
   /** @param opts {{logger: winston.Logger}} */
   constructor(nightmare, opts) {
-    this._unexpiredDate = '1997-01-01'
+    this._expiredDate = '1997-01-01'
     this._completedProgress = '100.00%'
     this._scraper = new TinyCardsScraper(nightmare, opts)
     this._email = opts.email
@@ -74,16 +74,16 @@ export default class TinyCardsMonitor {
     if (currentTime.getHours() == 5
             && currentTime.getMinutes() >= 29
             && currentTime.getMinutes() <= 31) {
-      this._logger.debug(`Expiring all decks for notifications. Setting date to "${self._unexpiredDate}"`);
+      this._logger.debug(`Expiring all decks for notifications. Setting date to "${self._expiredDate}"`);
 
       // expire everything
       await self._context.MonitorRecord.update({
-        LastNotified: new Date(self._unexpiredDate)
+        LastNotified: new Date(self._expiredDate)
       },
       {
         where: {
           LastNotified: {
-            [Sequelize.Op.gt]: new Date(self._unexpiredDate)
+            [Sequelize.Op.gt]: new Date(self._expiredDate)
           }
         }
       }).catch(err => this._logger.error(`Error processing records in monitor db ${err}`));
@@ -100,9 +100,6 @@ export default class TinyCardsMonitor {
     let decks = self._scraper.decks
     let toNotify = []
     for (let deck of decks) {
-      if (deck.progress === self._completedProgress) continue
-      
-      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progrress: "${deck.progress}."`);
 
       // get deck from database
       let fromDb = await self._context.MonitorRecord.findAll({
@@ -111,8 +108,29 @@ export default class TinyCardsMonitor {
         }
       }).catch(err => this._logger.error(`Error getting deck from db ${err}`));
 
+      /** @type {MonitorRecord} */
       let found = null;
       if (fromDb.length) found = fromDb[0]
+
+      // if the deck has been completed, but is not expired
+      if (found && deck.progress === self._completedProgress && !this._isExpired(found)) {
+        //  expire the deck
+        await self._context.MonitorRecord.update({
+          LastNotified: self._expiredDate
+        }, {
+          where: {
+            DeckUrl: found.DeckUrl
+          }
+        }).catch(err => self._logger.error(`Error expiring the completed deck. Deck: "${deck.name}". Err: "${err}"`));
+        continue;
+      }
+
+      if (deck.progress === self._completedProgress)
+      {
+        continue;
+      }
+
+      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progrress: "${deck.progress}."`);
 
       // if not found or if found and expired
       if (!found || self._isExpired(found)) {
