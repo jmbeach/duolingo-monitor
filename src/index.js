@@ -21,11 +21,19 @@ const logger = winston.createLogger({
 });
 
 config.logger = logger;
-
 var monitor = new Monitor(nightmare, config)
 
+const startMonitor = async () => {
+  await monitor.monitor();
+  setInterval(() => {
+    nightmare = new Nightmare({
+      show: true,
+      openDevTools: {
+        mode: 'detach'
+      }
+    })
 monitor.monitor();
+  }, 250);
+}
 
-setInterval(() => {
-  monitor.monitor();
-}, 300000);
+startMonitor();

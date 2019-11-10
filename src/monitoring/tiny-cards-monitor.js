@@ -33,9 +33,9 @@ export default class TinyCardsMonitor {
   }
 
   monitor() {
-    this._logger.info('Running monitor.');
-    var self = this
-    self._process()
+    const self = this;
+    self._logger.info('Running monitor.');
+    return self._process();
   }
 
   _notify(decks, totalDecks, startedDecks) {
