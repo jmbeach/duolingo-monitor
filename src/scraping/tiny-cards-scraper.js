@@ -49,7 +49,8 @@ class TinyCardsScraper {
       .type(self._inputUserSelector, self._username)
       .type(self._inputPassSelector, self._password)
       .click(self._btnLoginSubmitSelector)
-      .then(() => self);
+      .then(() => self)
+      .catch(err => self._logger.error(`Error logging in ${err}.`));
   }
 
   async getDecks() {
@@ -71,7 +72,7 @@ class TinyCardsScraper {
       .then(x => x)
       .catch(err => {
         self._logger.error(`Error getting course. Err: "${err}".`);
-        self._nightmare.end()
+        self._nightmare.end().then(x => x);
         return
       });
 
@@ -81,7 +82,7 @@ class TinyCardsScraper {
       .evaluate(self._getAllDecks, self._deckClass, self._progressClassOuter)
       .catch(err => {
         self._logger.error(`Error getting all decks. Err: "${err}".`);
-        self._nightmare.end();
+        self._nightmare.end().then(x => x);
         return
       });
 
@@ -100,14 +101,14 @@ class TinyCardsScraper {
         self._completedClass)
       .catch(err => {
         self._logger.error(`Error getting detailed progress for deck. Err: "${err}".`);
-        self._nightmare.end()
+        self._nightmare.end().then(x => x);
         return
       })
 
     self.decks[self.decks.length - 1].progress = accurateProgress
 
     self._logger.info('Closing the browser.');
-    await self._nightmare.end()
+    await self._nightmare.end().then(x => x);
 
     return self
   }

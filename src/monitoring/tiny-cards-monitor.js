@@ -4,12 +4,17 @@ import { join } from 'path';
 import nodemailer from 'nodemailer';
 import TinyCardsScraper from '../scraping/tiny-cards-scraper';
 import winston from 'winston';
+import Nightmare from 'nightmare';
 
 export default class TinyCardsMonitor {
-  /** @param opts {{logger: winston.Logger}} */
-  constructor(nightmare, opts) {
+  /**
+   * @param opts {{logger: winston.Logger}}
+   * @param nightmareFactory {() => Nightmare}
+   * */
+  constructor(nightmareFactory, opts) {
     this._expiredDate = '1997-01-01'
     this._completedProgress = '100.00%'
+    let nightmare = nightmareFactory();
     this._scraper = new TinyCardsScraper(nightmare, opts)
     this._email = opts.email
     this._smtpOptions = opts.smtp
@@ -20,6 +25,8 @@ export default class TinyCardsMonitor {
       logging: false
     }));
     this._logger = opts.logger;
+    this._nightmareFactory = nightmareFactory;
+    this._opts = opts;
 
     this._transport = nodemailer.createTransport({
       host: this._smtpOptions.host,
@@ -29,18 +36,23 @@ export default class TinyCardsMonitor {
         user: this._smtpOptions.username,
         pass: this._smtpOptions.password
       }
-    })
+    });
+
+    this.isMonitoring = false;
   }
 
   monitor() {
     const self = this;
+    self.isMonitoring = true;
+    let nightmare = self._nightmareFactory();
+    self._scraper = new TinyCardsScraper(nightmare, self._opts);
     self._logger.info('Running monitor.');
-    return self._process();
+    self._process();
   }
 
   _notify(decks, totalDecks, startedDecks) {
-    this._logger.info('Sending notification of decks to study');
-    var self = this
+    const self = this
+    self._logger.info('Sending notification of decks to study');
     if (!decks || !decks.length) return
     var subject = 'DuoLingo Monitor - ' + decks.length + ' decks need review'
     var body = ''
@@ -65,9 +77,8 @@ export default class TinyCardsMonitor {
   }
 
   async _process() {
-    this._logger.info('Processing monitor db.');
-
-    var self = this
+    var self = this;
+    self._logger.info('Processing monitor db.');
 
     // if it is 5:30 A.M
     var currentTime = new Date()
@@ -91,7 +102,9 @@ export default class TinyCardsMonitor {
 
     this._logger.info('Running scraper.');
     await self._scraper.login()
-      .then(x => x.getDecks())
+      .then(x => {
+        return x.getDecks()
+      })
       .catch(err => {
         this._logger.error(`Error retrieving decks ${err}`);
       });
@@ -100,7 +113,6 @@ export default class TinyCardsMonitor {
     let decks = self._scraper.decks
     let toNotify = []
     for (let deck of decks) {
-
       // get deck from database
       let fromDb = await self._context.MonitorRecord.findAll({
         where: {
@@ -163,7 +175,8 @@ export default class TinyCardsMonitor {
 
     }
 
-    self._notify(toNotify, self._scraper.totalDecks, self._scraper.startedDecks)
+    self._notify(toNotify, self._scraper.totalDecks, self._scraper.startedDecks);
+    self.isMonitoring = false;
   }
 
   /** @param monitorRecord {MonitorRecord} */

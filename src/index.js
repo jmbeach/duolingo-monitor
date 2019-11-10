@@ -5,7 +5,6 @@ import Monitor from './monitoring/tiny-cards-monitor';
 import Nightmare from 'nightmare';
 import winston from 'winston';
 
-var nightmare = new Nightmare();
 const logger = winston.createLogger({
   level: 'debug',
   format: winston.format.combine(
@@ -21,18 +20,17 @@ const logger = winston.createLogger({
 });
 
 config.logger = logger;
-var monitor = new Monitor(nightmare, config)
+const nightmareFactory = () => {
+  return new Nightmare();
+};
+
+var monitor = new Monitor(nightmareFactory, config)
 
 const startMonitor = async () => {
-  await monitor.monitor();
-  setInterval(() => {
-    nightmare = new Nightmare({
-      show: true,
-      openDevTools: {
-        mode: 'detach'
-      }
-    })
-monitor.monitor();
+  monitor.monitor();
+  setInterval(async () => {
+    if (monitor.isMonitoring) return;
+    monitor.monitor();
   }, 250);
 }
 
