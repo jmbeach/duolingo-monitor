@@ -1,4 +1,5 @@
-//import 'babel-polyfill'
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import config from '../config.json';
 import Monitor from './monitoring/tiny-cards-monitor';
 import Nightmare from 'nightmare';

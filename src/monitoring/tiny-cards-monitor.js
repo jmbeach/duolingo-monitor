@@ -91,7 +91,7 @@ export default class TinyCardsMonitor {
 
     this._logger.info('Running scraper.');
     await self._scraper.login()
-      .getDecks()
+      .then(x => x.getDecks())
       .catch(err => {
         this._logger.error(`Error retrieving decks ${err}`);
       });

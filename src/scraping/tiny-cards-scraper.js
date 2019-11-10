@@ -1,7 +1,11 @@
 import winston from 'winston';
+import Nightmare from 'nightmare';
 
 class TinyCardsScraper {
-  /** @param opts {{logger: winston.Logger}} */
+  /**
+   * @param opts {{logger: winston.Logger}}
+   * @param nightmare {Nightmare}
+  */
   constructor(nightmare, opts) {
     this._activeDeckClass = '_2MMwG'
     this._activeIncompleteDeckClass = '_1-IZO RMHAA'
@@ -28,11 +32,11 @@ class TinyCardsScraper {
     this.totalDecks = 0;
   }
 
-  login() {
+  async login() {
     const self = this
     self.decks = [];
     self._logger.info('Logging in to tiny cards.');
-    self._nightmare
+    return self._nightmare
       .goto(self._tinyCardsHome)
       .evaluate((buttonSelector) => {
         var buttons = document.getElementsByTagName('button')
@@ -45,7 +49,7 @@ class TinyCardsScraper {
       .type(self._inputUserSelector, self._username)
       .type(self._inputPassSelector, self._password)
       .click(self._btnLoginSubmitSelector)
-    return self
+      .then(() => self);
   }
 
   async getDecks() {
@@ -64,6 +68,7 @@ class TinyCardsScraper {
           }
         }
       }, self._courseUrl)
+      .then(x => x)
       .catch(err => {
         self._logger.error(`Error getting course. Err: "${err}".`);
         self._nightmare.end()
@@ -73,8 +78,7 @@ class TinyCardsScraper {
     self._logger.info('Getting all the decks from course.');
     var allDecks = await self._nightmare
       .wait(2000)
-      .evaluate(self._getAllDecks,
-        self._deckClass, self._progressClassOuter)
+      .evaluate(self._getAllDecks, self._deckClass, self._progressClassOuter)
       .catch(err => {
         self._logger.error(`Error getting all decks. Err: "${err}".`);
         self._nightmare.end();
