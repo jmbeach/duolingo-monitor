@@ -52,8 +52,8 @@ export default class TinyCardsMonitor {
 
   _notify(decks, totalDecks, startedDecks) {
     const self = this
-    self._logger.info('Sending notification of decks to study');
     if (!decks || !decks.length) return
+    self._logger.info('Sending notification of decks to study');
     var subject = 'DuoLingo Monitor - ' + decks.length + ' decks need review'
     var body = ''
     for (var deck of decks) {
