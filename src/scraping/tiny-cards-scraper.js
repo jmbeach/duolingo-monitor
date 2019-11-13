@@ -191,7 +191,7 @@ class TinyCardsScraper {
   _getDeckProgress(activeDeckClass, progressClass, completedClass) {
     const waitForElementToExist = className => {
       while (true) {
-        if (document.getElementsByClassName(className) != null)
+        if (document.getElementsByClassName(className).length)
           return;
       }
     };
