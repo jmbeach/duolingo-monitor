@@ -134,7 +134,7 @@ class TinyCardsScraper {
           deckStatus.name = deckLink.firstChild.innerText
           var progressBar = deck.getElementsByClassName(progressClass)[0]
           if (!progressBar) return
-          deckStatus.progress = parseFloat(progressBar.style.width).toFixed(2) + "%"
+          deckStatus.progress = parseFloat(progressBar.style.width).toFixed(2) + '%';
           result.push(deckStatus)
         }
       }
@@ -148,7 +148,7 @@ class TinyCardsScraper {
         return null
       }
 
-      var decks = document.getElementsByClassName(deckClass)
+      decks = document.getElementsByClassName(deckClass)
       var lastResultCount = 0
       var lastTotalResultCount = 0
       var doLoad = true
@@ -189,6 +189,14 @@ class TinyCardsScraper {
   }
 
   _getDeckProgress(activeDeckClass, progressClass, completedClass) {
+    const waitForElementToExist = className => {
+      while (true) {
+        if (document.getElementsByClassName(className) != null)
+          return;
+      }
+    };
+
+    waitForElementToExist(activeDeckClass);
     var activeDecks = document.getElementsByClassName(activeDeckClass)
     var complete = 0
     var incomplete = 0
@@ -214,7 +222,8 @@ class TinyCardsScraper {
       percentage = (complete / (complete + incomplete)) * 100
     }
 
-    return percentage.toFixed(2) + '%'
+    const result = percentage.toFixed(2) + '%'
+    return result;
   }
 }
 
