@@ -138,7 +138,7 @@ export default class TinyCardsMonitor {
         continue;
       }
 
-      if (deck.progress === self._completedProgress)
+      if (deck.progress === self._completedProgress || !deck.progress)
       {
         continue;
       }
