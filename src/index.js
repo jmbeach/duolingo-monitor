@@ -1,6 +1,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import config from '../config.json';
+import fs from 'fs';
 import Monitor from './monitoring/tiny-cards-monitor';
 import Nightmare from 'nightmare';
 import winston from 'winston';
@@ -18,6 +19,16 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'tinycards.log' })
   ]
 });
+
+try {
+  if (!fs.existsSync('monitor.db')) {
+    fs.copyFile('template.db', 'monitor.db', err => {
+      logger.debug(`Could not create monitor.db. Error: ${err}.`);
+    });
+  }
+} catch (err) {
+  logger.debug(`Unhandled error creating monitor.db. Error: ${err}.`);
+}
 
 config.logger = logger;
 const nightmareFactory = () => {
