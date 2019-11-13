@@ -107,6 +107,7 @@ export default class TinyCardsMonitor {
       })
       .catch(err => {
         this._logger.error(`Error retrieving decks ${err}`);
+        this.isMonitoring = false;
       });
 
     if (!self._scraper.decks || !self._scraper.decks.length) return
@@ -142,7 +143,7 @@ export default class TinyCardsMonitor {
         continue;
       }
 
-      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progrress: "${deck.progress}."`);
+      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progress: "${deck.progress}."`);
 
       // if not found or if found and expired
       if (!found || self._isExpired(found)) {
