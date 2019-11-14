@@ -22,9 +22,7 @@ const logger = winston.createLogger({
 
 try {
   if (!fs.existsSync('monitor.db')) {
-    fs.copyFile('template.db', 'monitor.db', err => {
-      logger.debug(`Could not create monitor.db. Error: ${err}.`);
-    });
+    fs.copyFileSync('template.db', 'monitor.db');
   }
 } catch (err) {
   logger.debug(`Unhandled error creating monitor.db. Error: ${err}.`);
