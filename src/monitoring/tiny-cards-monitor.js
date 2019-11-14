@@ -41,6 +41,98 @@ export default class TinyCardsMonitor {
     this.isMonitoring = false;
   }
 
+  async getAllIncomplete(decks) {
+    const self = this;
+    let allExpired = [];
+    for (let deck of decks) {
+      // get deck from database
+      let fromDb = await self._context.MonitorRecord.findAll({
+        where: {
+          DeckUrl: deck.link
+        }
+      }).catch(err => this._logger.error(`Error getting deck from db ${err}`));
+
+      /** @type {MonitorRecord} */
+      let found = null;
+      if (fromDb.length) found = fromDb[0]
+
+      if (found && deck.progress && deck.progress !== self._completedProgress) {
+        allExpired.push(deck);
+      }
+    }
+
+    return allExpired;
+  }
+
+  async getNewlyExpired(decks) {
+    const self = this;
+    let newlyExpired = [];
+    for (let deck of decks) {
+      // get deck from database
+      let fromDb = await self._context.MonitorRecord.findAll({
+        where: {
+          DeckUrl: deck.link
+        }
+      }).catch(err => this._logger.error(`Error getting deck from db ${err}`));
+
+      /** @type {MonitorRecord} */
+      let found = null;
+      if (fromDb.length) found = fromDb[0]
+
+      // if the deck has been completed, but is not expired
+      if (found && deck.progress === self._completedProgress && !this._isExpired(found)) {
+        //  expire the deck
+        await self._context.MonitorRecord.update({
+          LastNotified: self._expiredDate
+        }, {
+          where: {
+            DeckUrl: found.DeckUrl
+          }
+        }).catch(err => self._logger.error(`Error expiring the completed deck. Deck: "${deck.name}". Err: "${err}"`));
+        continue;
+      }
+
+      if (deck.progress === self._completedProgress || !deck.progress)
+      {
+        continue;
+      }
+
+      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progress: "${deck.progress}."`);
+
+      // if not found or if found and expired
+      if (!found || self._isExpired(found)) {
+        self._logger.debug(`Deck not found or is expired in DB. Notifying. Deck: "${deck.name}"."`);
+        
+        //  add to notification list
+        newlyExpired.push(deck)
+
+        if (found) {
+          self._logger.debug(`Updating last notification time. Deck: "${deck.name}"."`);
+
+          // update LastNotified
+          // TODO: this should probably happen in _notify...
+          await self._context.MonitorRecord.update({
+            LastNotified: new Date()
+          }, {
+            where: {
+              DeckUrl: found.DeckUrl
+            }
+          }).catch(err => self._logger.error(`Error updating monitor record last notified. ${err}`));
+        } else {
+          self._logger.debug(`Creating monitor record. Deck: "${deck.name}"."`);
+          // insert monitor record
+          await self._context.MonitorRecord.create(
+            {
+              DeckUrl: deck.link,
+              LastNotified: new Date()
+            }).catch(err => self._logger.error(`Error creating monitor record. ${err}`));
+        }
+      }
+    }
+
+    return newlyExpired;
+  }
+
   monitor() {
     const self = this;
     self.isMonitoring = true;
@@ -52,8 +144,8 @@ export default class TinyCardsMonitor {
 
   _notify(decks, totalDecks, startedDecks) {
     const self = this
-    if (!decks || !decks.length) return
     self._logger.info('Sending notification of decks to study');
+    if (!decks || !decks.length) return
     var subject = 'DuoLingo Monitor - ' + decks.length + ' decks need review'
     var body = ''
     for (var deck of decks) {
@@ -112,71 +204,14 @@ export default class TinyCardsMonitor {
 
     if (!self._scraper.decks || !self._scraper.decks.length) return
     let decks = self._scraper.decks
-    let toNotify = []
-    for (let deck of decks) {
-      // get deck from database
-      let fromDb = await self._context.MonitorRecord.findAll({
-        where: {
-          DeckUrl: deck.link
-        }
-      }).catch(err => this._logger.error(`Error getting deck from db ${err}`));
+    const newlyExpired = await self.getNewlyExpired(decks);
 
-      /** @type {MonitorRecord} */
-      let found = null;
-      if (fromDb.length) found = fromDb[0]
-
-      // if the deck has been completed, but is not expired
-      if (found && deck.progress === self._completedProgress && !this._isExpired(found)) {
-        //  expire the deck
-        await self._context.MonitorRecord.update({
-          LastNotified: self._expiredDate
-        }, {
-          where: {
-            DeckUrl: found.DeckUrl
-          }
-        }).catch(err => self._logger.error(`Error expiring the completed deck. Deck: "${deck.name}". Err: "${err}"`));
-        continue;
-      }
-
-      if (deck.progress === self._completedProgress || !deck.progress)
-      {
-        continue;
-      }
-
-      self._logger.debug(`Deck incomplete. Deck: "${deck.name}". Progress: "${deck.progress}."`);
-
-      // if not found or if found and expired
-      if (!found || self._isExpired(found)) {
-        self._logger.debug(`Deck not found or is expired in DB. Notifying. Deck: "${deck.name}"."`);
-        
-        //  add to notification list
-        toNotify.push(deck)
-
-        if (found) {
-          self._logger.debug(`Updating last notification time. Deck: "${deck.name}"."`);
-
-          //  update LastNotified
-          await self._context.MonitorRecord.update({
-            LastNotified: new Date()
-          }, {
-            where: {
-              DeckUrl: found.DeckUrl
-            }
-          }).catch(err => self._logger.error(`Error updating monitor record last notified. ${err}`));
-        } else {
-          self._logger.debug(`Creating monitor record. Deck: "${deck.name}"."`);
-          // insert monitor record
-          await self._context.MonitorRecord.create(
-            {
-              DeckUrl: deck.link,
-              LastNotified: new Date()
-            }).catch(err => self._logger.error(`Error creating monitor record. ${err}`));
-        }
-      }
-
+    if (newlyExpired && newlyExpired.length) {
+      // notify with all expired
+      const allExpired = await self.getAllIncomplete(decks);
+      self._notify(allExpired, self._scraper.totalDecks, self._scraper.startedDecks);
     }
 
-    self._notify(toNotify, self._scraper.totalDecks, self._scraper.startedDecks);
     self.isMonitoring = false;
   }
 
