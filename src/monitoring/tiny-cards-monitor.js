@@ -218,7 +218,7 @@ export default class TinyCardsMonitor {
   /** @param monitorRecord {MonitorRecord} */
   _isExpired(monitorRecord) {
     this._logger.debug(`Checking if monitor record is expired. Deck URL: "${monitorRecord.DeckUrl}". Last notified: "${monitorRecord.LastNotified}"`)
-    // true if last seen is more than an hour ago
-    return new Date().getTime() - new Date(monitorRecord.LastNotified).getTime() > 3600000
+    // true if last seen is more than 12 hours
+    return new Date().getTime() - new Date(monitorRecord.LastNotified).getTime() > 43200000
   }
 }
