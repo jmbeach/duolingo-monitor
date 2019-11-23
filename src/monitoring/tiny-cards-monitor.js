@@ -14,8 +14,8 @@ export default class TinyCardsMonitor {
   constructor(nightmareFactory, opts) {
     this._expiredDate = '1997-01-01'
     this._completedProgress = '100.00%'
-    let nightmare = nightmareFactory();
-    this._scraper = new TinyCardsScraper(nightmare, opts)
+    this._nightmare = nightmareFactory();
+    this._scraper = new TinyCardsScraper(this._nightmare, opts)
     this._email = opts.email
     this._smtpOptions = opts.smtp
     this._dbPath = join(process.cwd(), 'monitor.db')
@@ -136,8 +136,8 @@ export default class TinyCardsMonitor {
   monitor() {
     const self = this;
     self.isMonitoring = true;
-    let nightmare = self._nightmareFactory();
-    self._scraper = new TinyCardsScraper(nightmare, self._opts);
+    self._nightmare = self._nightmareFactory();
+    self._scraper = new TinyCardsScraper(self._nightmare, self._opts);
     self._logger.info('Running monitor.');
     self._process();
   }

@@ -59,7 +59,7 @@ class TinyCardsScraper {
     self.decks = []
 
     self._logger.info('Opening the tiny cards course.');
-    await self._nightmare
+    let getCourseResult = await self._nightmare
       .wait(5000)
       .evaluate((courseUrl) => {
         const links = document.getElementsByTagName('a')
@@ -73,8 +73,11 @@ class TinyCardsScraper {
       .catch(err => {
         self._logger.error(`Error getting course. Err: "${err}".`);
         self._nightmare.end().then(x => x);
-        return
+        return false;
       });
+
+    if (getCourseResult === false)
+      throw 'Could not retreive courses'
 
     self._logger.info('Getting all the decks from course.');
     var allDecks = await self._nightmare
@@ -103,7 +106,9 @@ class TinyCardsScraper {
         self._logger.error(`Error getting detailed progress for deck. Err: "${err}".`);
         self._nightmare.end().then(x => x);
         return
-      })
+      });
+
+    if (!accurateProgress) throw 'Could not get accurate progress for all decks.';
 
     self.decks[self.decks.length - 1].progress = accurateProgress
 
@@ -197,6 +202,7 @@ class TinyCardsScraper {
     };
 
     waitForElementToExist(activeDeckClass);
+    waitForElementToExist(activeDeckClass);
     var activeDecks = document.getElementsByClassName(activeDeckClass)
     var complete = 0
     var incomplete = 0
@@ -205,7 +211,6 @@ class TinyCardsScraper {
 
     for (var deck of activeDecks) {
       var progress = deck.getElementsByClassName(progressClass)
-      var completed = deck.getElementsByClassName(completedClass)
 
       if (completed.length) {
         complete++;

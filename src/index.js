@@ -38,7 +38,7 @@ var monitor = new Monitor(nightmareFactory, config)
 const startMonitor = async () => {
   monitor.monitor();
   setInterval(async () => {
-    if (monitor.isMonitoring) return;
+    if (monitor._nightmare.running) return;
     monitor.monitor();
   }, 250);
 }
