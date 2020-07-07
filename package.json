@@ -12,7 +12,7 @@
   "author": "Jared Beach",
   "license": "MIT",
   "dependencies": {
-    "electron": "^2.0.6",
+    "electron": "^7.2.4",
     "nightmare": "^3.0.1",
     "nodemailer": "^4.6.7",
     "sequelize": "^4.38.0",
